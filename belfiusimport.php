@@ -25,7 +25,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 dol_include_once('/importbancairebelfius/class/belfiusimport.class.php');
 
-global $db, $langs, $user;
+global $db, $langs, $user, $conf;
 
 $langs->loadLangs(array("banks", "importbancairebelfius@importbancairebelfius"));
 
@@ -95,20 +95,38 @@ if (!empty($_SESSION[$sessionKey]) && file_exists($_SESSION[$sessionKey])) {
 	}
 }
 
+$lockKey = $sessionKey.'_LOCK';
+
 if ($action == 'confirm' && $parser) {
 	if (!$user->hasRight('importbancairebelfius', 'write')) {
 		accessforbidden();
 	}
 
-	$fk_account = GETPOSTINT('fk_account');
-	$result = $import->import($fk_account, $user);
-	if ($result < 0) {
-		setEventMessages(implode(', ', $import->errors), null, 'errors');
+	// Garde-fou contre un double-clic ou un rechargement malheureux qui enverrait deux
+	// confirmations en parallèle avant que la première n'ait fini d'écrire en base.
+	if (!empty($_SESSION[$lockKey])) {
+		setEventMessages("Un import est déjà en cours de traitement pour ce fichier, patiente avant de recliquer.", null, 'warnings');
 	} else {
-		setEventMessages("Import terminé", null, 'mesgs');
-		dol_delete_file($_SESSION[$sessionKey]);
-		unset($_SESSION[$sessionKey]);
-		$parser = null;
+		$_SESSION[$lockKey] = 1;
+
+		$fk_account = !empty($conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT) ? $conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT : 0;
+
+		if (empty($fk_account)) {
+			setEventMessages("Aucun compte bancaire cible configuré. Configure-le d'abord dans les paramètres du module.", null, 'errors');
+			unset($_SESSION[$lockKey]);
+		} else {
+			$result = $import->import($fk_account, $user);
+			unset($_SESSION[$lockKey]);
+
+			if ($result < 0) {
+				setEventMessages(implode(', ', $import->errors), null, 'errors');
+			} else {
+				setEventMessages($import->importedCount." écriture(s) créée(s), ".$import->skippedDuplicatesCount." doublon(s) ignoré(s)", null, 'mesgs');
+				dol_delete_file($_SESSION[$sessionKey]);
+				unset($_SESSION[$sessionKey]);
+				$parser = null;
+			}
+		}
 	}
 }
 
@@ -194,11 +212,20 @@ if (!$parser) {
 		print '</div>';
 	}
 
+	$fk_account = !empty($conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT) ? $conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT : 0;
+	if (empty($fk_account)) {
+		print '<br><div class="warning">Aucun compte bancaire cible configuré — configure-le d\'abord dans les paramètres du module avant de confirmer.</div>';
+	} else {
+		$targetAccount = new Account($db);
+		$targetAccount->fetch($fk_account);
+		print '<br><div class="center">Compte bancaire cible : <strong>'.dol_escape_htmltag($targetAccount->label).'</strong></div>';
+	}
+
 	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<div class="center">';
 	print '<input type="submit" class="button" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
-	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import">';
+	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import"'.(empty($fk_account) ? ' disabled' : '').'>';
 	print '</div>';
 	print '</form>';
 }

@@ -49,17 +49,19 @@ Ces trois lignes illustrent la variété réelle du champ **Communications** : u
 - [x] Validation ligne par ligne (nombre de colonnes, format de date, format de montant) avec raison du rejet
 - [x] Calcul du solde recalculé et comparaison au solde annoncé dans le préambule (avertissement non bloquant)
 - [x] Rapport complet à l'écran : compteurs, avertissements, lignes rejetées (toujours affichées, même vide), liste détaillée des lignes qui seront importées
-- [x] Aucune écriture en base sans confirmation humaine explicite (bouton "Confirmer l'import")
+- [x] Page de configuration (`admin/setup.php`) : choix du compte bancaire Dolibarr cible pour l'import
+- [x] Création effective des écritures bancaires (`Account::addline()`) après confirmation humaine explicite — aucune écriture pendant l'analyse
+- [x] Déduplication : clé naturelle n° d'extrait + n° de transaction stockée dans le champ technique "N° chèque" de l'écriture, vérifiée avant toute création (pas de doublon si un export chevauchant est réimporté)
+- [x] Import atomique : tout ou rien, annulation complète si une ligne échoue en cours de route
+- [x] Protection contre un double-clic / une confirmation concurrente (verrou de session)
 - [x] Protection basique (fichiers `index.php` anti-listing, droits Dolibarr requis pour uploader/confirmer)
-- [x] Testé avec succès sur un export de production réel (269 lignes, 0 rejet)
+- [x] Rapport d'analyse testé avec succès sur un export de production réel (269 lignes, 0 rejet)
 
 ## Prochaines étapes
 
-- [ ] Création effective des écritures bancaires à la confirmation (`Account`/`AccountLine`) — actuellement un stub qui ne fait rien
-- [ ] Page de configuration (`admin/setup.php`) : choix du compte bancaire Dolibarr cible pour l'import — formulaire pas encore implémenté
-- [ ] Gestion des doublons si un export avec chevauchement de dates est réimporté (clé n° d'extrait + n° de transaction)
+- [ ] Test complet de bout en bout de la création d'écritures : import réel + réimport du même export pour valider la déduplication en conditions réelles
 - [ ] Décider si les imports doivent être journalisés dans une table dédiée (audit) ou rester sans persistance au-delà du rapport affiché
-- [ ] Rapprochement automatique avec les factures ouvertes (V2), toujours avec confirmation humaine obligatoire avant toute création de règlement
+- [ ] Rapprochement automatique avec les factures ouvertes (V2), toujours avec confirmation humaine obligatoire avant toute création de règlement — jamais rien en automatique
 - [ ] Tester l'activation/le fonctionnement une fois la migration Dolibarr 22 → 23.x effectuée
 
 ## Installation
