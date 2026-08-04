@@ -4,7 +4,21 @@
  * Dolibarr cible pour l'import.
  */
 
-require '../../main.inc.php';
+// Le module peut être déployé dans htdocs/<module>/admin/ (2 niveaux) ou
+// htdocs/custom/<module>/admin/ (3 niveaux) : on teste plusieurs profondeurs.
+$res = 0;
+if (!$res && file_exists("../../main.inc.php")) {
+	$res = @include "../../main.inc.php";
+}
+if (!$res && file_exists("../../../main.inc.php")) {
+	$res = @include "../../../main.inc.php";
+}
+if (!$res && file_exists("../../../../main.inc.php")) {
+	$res = @include "../../../../main.inc.php";
+}
+if (!$res) {
+	die("Include of main fails");
+}
 
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
