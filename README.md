@@ -39,7 +39,26 @@ Plutôt qu'une solution générique du Dolistore (multi-banques, connexion à un
 
 Ces trois lignes illustrent la variété réelle du champ **Communications** : une référence de cotisation en texte libre, un texte dupliqué de la colonne "Transaction" (paiement par carte), et une référence structurée de virement.
 
-> Toutes les valeurs ci-dessus (comptes, noms, adresses, montants, BIC) sont inventées à des fins d'illustration uniquement.
+## Ce que le module fait déjà
+
+- [x] Activation du module sur Dolibarr 22.0.2 (permissions "Consulter" / "Importer" dédiées)
+- [x] Formulaire d'upload d'un fichier CSV Belfius
+- [x] Conversion ISO-8859-1 → UTF-8 et détection stricte de la ligne d'en-tête (abandon si format non reconnu)
+- [x] Validation ligne par ligne (nombre de colonnes, format de date, format de montant) avec raison du rejet
+- [x] Calcul du solde recalculé et comparaison au solde annoncé dans le préambule (avertissement non bloquant)
+- [x] Rapport complet à l'écran : compteurs, avertissements, lignes rejetées (toujours affichées, même vide), liste détaillée des lignes qui seront importées
+- [x] Aucune écriture en base sans confirmation humaine explicite (bouton "Confirmer l'import")
+- [x] Protection basique (fichiers `index.php` anti-listing, droits Dolibarr requis pour uploader/confirmer)
+- [x] Testé avec succès sur un export de production réel (269 lignes, 0 rejet)
+
+## Prochaines étapes
+
+- [ ] Création effective des écritures bancaires à la confirmation (`Account`/`AccountLine`) — actuellement un stub qui ne fait rien
+- [ ] Page de configuration (`admin/setup.php`) : choix du compte bancaire Dolibarr cible pour l'import — formulaire pas encore implémenté
+- [ ] Gestion des doublons si un export avec chevauchement de dates est réimporté (clé n° d'extrait + n° de transaction)
+- [ ] Décider si les imports doivent être journalisés dans une table dédiée (audit) ou rester sans persistance au-delà du rapport affiché
+- [ ] Rapprochement automatique avec les factures ouvertes (V2), toujours avec confirmation humaine obligatoire avant toute création de règlement
+- [ ] Tester l'activation/le fonctionnement une fois la migration Dolibarr 22 → 23.x effectuée
 
 ## Installation
 
@@ -47,5 +66,5 @@ Copier ce dossier dans `custom/` de l'instance Dolibarr cible, puis activer le m
 
 ## Compatibilité
 
-- Dolibarr 23.x
+- Dolibarr 22.x+
 - PHP 7.2+
