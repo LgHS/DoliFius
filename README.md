@@ -2,6 +2,8 @@
 
 ![DoliFius](img/dolifiuslogo.png)
 
+**DoliFius** Dolibarr Module for Belfius CSV import.
+
 Module Dolibarr custom pour importer les extraits de compte **Belfius** (export CSV) et faciliter le rapprochement bancaire.
 
 ## Pourquoi ce module
