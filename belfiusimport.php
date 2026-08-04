@@ -119,6 +119,8 @@ if ($action == 'confirm' && $parser) {
 $title = $langs->trans("ImportBancaireBelfius");
 llxHeader('', $title);
 
+print '<div class="center"><img src="'.dol_buildpath('/importbancairebelfius/img/dolifiuslogo.png', 1).'" style="max-height:80px;" alt="DoliFius"></div>';
+
 print load_fiche_titre($title, '', 'bank_account');
 
 if (!$parser) {
