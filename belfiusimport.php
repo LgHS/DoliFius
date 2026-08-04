@@ -165,6 +165,37 @@ if (!$parser) {
 	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import">';
 	print '</div>';
 	print '</form>';
+
+	if (!empty($parser->validLines)) {
+		print '<br><h3>Lignes qui seront importées ('.count($parser->validLines).')</h3>';
+		print '<div style="max-height:500px; overflow-y:auto;">';
+		print '<table class="noborder centpercent">';
+		print '<tr class="liste_titre">';
+		print '<td>Date</td>';
+		print '<td>Contrepartie</td>';
+		print '<td class="right">Montant</td>';
+		print '<td>Communication</td>';
+		print '</tr>';
+
+		foreach ($parser->validLines as $lineNumber => $row) {
+			$date = $row[BelfiusCsvParser::COL_DATE_COMPTA];
+			$contrepartie = trim($row[5]) !== '' ? $row[5] : $row[8]; // fallback sur "Transaction" si pas de contrepartie (ex. paiement carte)
+			$montant = (float) str_replace(',', '.', $row[BelfiusCsvParser::COL_MONTANT]);
+			$communication = $row[14];
+
+			$colorStyle = $montant < 0 ? 'color:#c00;' : 'color:#008000;';
+
+			print '<tr class="oddeven">';
+			print '<td class="nowraponall">'.dol_escape_htmltag($date).'</td>';
+			print '<td>'.dol_escape_htmltag(dol_trunc($contrepartie, 40)).'</td>';
+			print '<td class="right nowraponall" style="'.$colorStyle.'">'.price($montant).' €</td>';
+			print '<td>'.dol_escape_htmltag(dol_trunc($communication, 60)).'</td>';
+			print '</tr>';
+		}
+
+		print '</table>';
+		print '</div>';
+	}
 }
 
 llxFooter();
