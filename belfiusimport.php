@@ -149,22 +149,17 @@ if (!$parser) {
 	print '<tr class="oddeven"><td>Solde annoncé (préambule)</td><td>'.($parser->announcedBalance !== null ? price($parser->announcedBalance) : '-').'</td></tr>';
 	print '</table>';
 
-	if (!empty($parser->rejectedLines)) {
-		print '<br><table class="noborder centpercent">';
-		print '<tr class="liste_titre"><td>Ligne</td><td>Raison du rejet</td></tr>';
+	print '<br><h3>Lignes rejetées ('.count($parser->rejectedLines).')</h3>';
+	print '<table class="noborder centpercent">';
+	print '<tr class="liste_titre"><td>Ligne</td><td>Raison du rejet</td></tr>';
+	if (empty($parser->rejectedLines)) {
+		print '<tr class="oddeven"><td colspan="2" class="opacitymedium">Aucune ligne rejetée</td></tr>';
+	} else {
 		foreach ($parser->rejectedLines as $lineNumber => $info) {
 			print '<tr class="oddeven"><td>'.((int) $lineNumber).'</td><td>'.dol_escape_htmltag($info['reason']).'</td></tr>';
 		}
-		print '</table>';
 	}
-
-	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<div class="center">';
-	print '<input type="submit" class="button" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
-	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import">';
-	print '</div>';
-	print '</form>';
+	print '</table>';
 
 	if (!empty($parser->validLines)) {
 		print '<br><h3>Lignes qui seront importées ('.count($parser->validLines).')</h3>';
@@ -187,7 +182,7 @@ if (!$parser) {
 
 			print '<tr class="oddeven">';
 			print '<td class="nowraponall">'.dol_escape_htmltag($date).'</td>';
-			print '<td>'.dol_escape_htmltag(dol_trunc($contrepartie, 40)).'</td>';
+			print '<td>'.dol_escape_htmltag($contrepartie).'</td>';
 			print '<td class="right nowraponall" style="'.$colorStyle.'">'.price($montant).' €</td>';
 			print '<td>'.dol_escape_htmltag(dol_trunc($communication, 60)).'</td>';
 			print '</tr>';
@@ -196,6 +191,14 @@ if (!$parser) {
 		print '</table>';
 		print '</div>';
 	}
+
+	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<div class="center">';
+	print '<input type="submit" class="button" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
+	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import">';
+	print '</div>';
+	print '</form>';
 }
 
 llxFooter();
