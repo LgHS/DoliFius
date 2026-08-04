@@ -1,0 +1,9 @@
+CLAUDE.md
+.vscode
+.claude
+
+# Exports bancaires de test
+*.csv
+
+# OS
+.DS_Store
