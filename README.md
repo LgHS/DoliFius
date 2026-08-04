@@ -58,13 +58,15 @@ Ces trois lignes illustrent la variété réelle du champ **Communications** : u
 - [x] Protection contre un double-clic / une confirmation concurrente (verrou de session)
 - [x] Protection basique (fichiers `index.php` anti-listing, droits Dolibarr requis pour uploader/confirmer)
 - [x] Rapport d'analyse testé avec succès sur un export de production réel (269 lignes, 0 rejet)
+- [x] Test complet de bout en bout de la création d'écritures : import réel + réimport du même export pour valider la déduplication en conditions réelles
 
 ## Prochaines étapes
 
-- [ ] Test complet de bout en bout de la création d'écritures : import réel + réimport du même export pour valider la déduplication en conditions réelles
 - [ ] Décider si les imports doivent être journalisés dans une table dédiée (audit) ou rester sans persistance au-delà du rapport affiché
 - [ ] Rapprochement automatique avec les factures ouvertes (V2), toujours avec confirmation humaine obligatoire avant toute création de règlement — jamais rien en automatique
 - [ ] Tester l'activation/le fonctionnement une fois la migration Dolibarr 22 → 23.x effectuée
+- [ ] Rapprochement automatique des lignes à l'utilisateur
+- [ ] Rapprochement automatique des lignes aux cotisations d'un utilisateur
 
 ## Installation
 
