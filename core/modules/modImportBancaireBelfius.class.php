@@ -70,7 +70,9 @@ class modImportBancaireBelfius extends DolibarrModules
 		$this->langfiles = array("importbancairebelfius@importbancairebelfius");
 
 		$this->phpmin = array(7, 2);
-		$this->need_dolibarr_version = array(23, -3);
+		// Instance de production encore en 22.0.2 au moment de l'écriture (migration vers 23.x
+		// prévue mais pas encore faite) — le module doit s'activer dès maintenant sur 22.x.
+		$this->need_dolibarr_version = array(22, -3);
 
 		$this->warnings_activation = array();
 		$this->warnings_activation_ext = array();
@@ -87,14 +89,12 @@ class modImportBancaireBelfius extends DolibarrModules
 
 		$this->rights[$r][0] = $this->numero + 1;
 		$this->rights[$r][1] = "Consulter les imports bancaires Belfius";
-		$this->rights[$r][4] = 'lire';
-		$this->rights[$r][5] = 'read';
+		$this->rights[$r][4] = 'read';
 		$r++;
 
 		$this->rights[$r][0] = $this->numero + 2;
 		$this->rights[$r][1] = "Importer des relevés bancaires Belfius (créer les écritures)";
-		$this->rights[$r][4] = 'ecrire';
-		$this->rights[$r][5] = 'write';
+		$this->rights[$r][4] = 'write';
 		$r++;
 
 		// Menus
