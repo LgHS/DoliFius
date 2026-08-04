@@ -3,7 +3,7 @@ NOTES_RAPPROCHEMENT_V2.md
 .vscode
 .claude
 
-# Exports bancaires de test
+# Exports bancaires anonymisés de test
 *.csv
 
 # OS
