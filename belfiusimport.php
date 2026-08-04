@@ -221,13 +221,22 @@ if (!$parser) {
 		print '<br><div class="center">Compte bancaire cible : <strong>'.dol_escape_htmltag($targetAccount->label).'</strong></div>';
 	}
 
-	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'" id="belfius_report_form">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<div class="center">';
-	print '<input type="submit" class="button" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
-	print ' <input type="submit" class="button button-save" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import"'.(empty($fk_account) ? ' disabled' : '').'>';
+	print '<input type="submit" class="button" id="btn_belfius_cancel" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
+	print ' <input type="submit" class="button button-save" id="btn_belfius_confirm" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import"'.(empty($fk_account) ? ' disabled' : '').'>';
 	print '</div>';
 	print '</form>';
+	print '<script>
+document.getElementById("belfius_report_form").addEventListener("submit", function (e) {
+	document.getElementById("btn_belfius_cancel").disabled = true;
+	document.getElementById("btn_belfius_confirm").disabled = true;
+	if (e.submitter && e.submitter.id === "btn_belfius_confirm") {
+		e.submitter.value = "Import en cours...";
+	}
+});
+</script>';
 }
 
 llxFooter();
