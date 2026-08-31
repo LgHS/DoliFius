@@ -1,4 +1,19 @@
 <?php
+/* Copyright (C) 2026 LgHS
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 /**
  * Page d'import des relevés bancaires Belfius : upload du CSV, affichage du rapport
  * d'analyse (lignes acceptées / rejetées, cohérence du solde) et confirmation
@@ -50,9 +65,9 @@ if ($action == 'upload') {
 	}
 
 	if (empty($_FILES['csvfile']['tmp_name']) || $_FILES['csvfile']['error'] != UPLOAD_ERR_OK) {
-		setEventMessages("Aucun fichier reçu ou erreur d'upload", null, 'errors');
+		setEventMessages($langs->trans("BelfiusErrorNoFileUploaded"), null, 'errors');
 	} elseif (strtolower(pathinfo($_FILES['csvfile']['name'], PATHINFO_EXTENSION)) != 'csv') {
-		setEventMessages("Le fichier doit être un .csv", null, 'errors');
+		setEventMessages($langs->trans("BelfiusErrorNotCsv"), null, 'errors');
 	} else {
 		if (!is_dir($tmpDir)) {
 			dol_mkdir($tmpDir);
@@ -62,7 +77,7 @@ if ($action == 'upload') {
 		$result = dol_move_uploaded_file($_FILES['csvfile']['tmp_name'], $destination, 1);
 
 		if (!$result || preg_match('/^Error/', $result)) {
-			setEventMessages("Échec de l'enregistrement du fichier uploadé : ".$result, null, 'errors');
+			setEventMessages($langs->trans("BelfiusErrorFileSaveFailed", $result), null, 'errors');
 		} else {
 			$_SESSION[$sessionKey] = $destination;
 		}
@@ -105,14 +120,14 @@ if ($action == 'confirm' && $parser) {
 	// Garde-fou contre un double-clic ou un rechargement malheureux qui enverrait deux
 	// confirmations en parallèle avant que la première n'ait fini d'écrire en base.
 	if (!empty($_SESSION[$lockKey])) {
-		setEventMessages("Un import est déjà en cours de traitement pour ce fichier, patiente avant de recliquer.", null, 'warnings');
+		setEventMessages($langs->trans("BelfiusImportInProgress"), null, 'warnings');
 	} else {
 		$_SESSION[$lockKey] = 1;
 
 		$fk_account = !empty($conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT) ? $conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT : 0;
 
 		if (empty($fk_account)) {
-			setEventMessages("Aucun compte bancaire cible configuré. Configure-le d'abord dans les paramètres du module.", null, 'errors');
+			setEventMessages($langs->trans("BelfiusNoAccountConfigured"), null, 'errors');
 			unset($_SESSION[$lockKey]);
 		} else {
 			$result = $import->import($fk_account, $user);
@@ -121,7 +136,7 @@ if ($action == 'confirm' && $parser) {
 			if ($result < 0) {
 				setEventMessages(implode(', ', $import->errors), null, 'errors');
 			} else {
-				setEventMessages($import->importedCount." écriture(s) créée(s), ".$import->skippedDuplicatesCount." doublon(s) ignoré(s)", null, 'mesgs');
+				setEventMessages($langs->trans("BelfiusImportResult", $import->importedCount, $import->skippedDuplicatesCount), null, 'mesgs');
 				dol_delete_file($_SESSION[$sessionKey]);
 				unset($_SESSION[$sessionKey]);
 				$parser = null;
@@ -148,12 +163,12 @@ if (!$parser) {
 	print '<input type="hidden" name="action" value="upload">';
 	print '<div class="center">';
 	print '<input type="file" name="csvfile" accept=".csv" required> ';
-	print '<input type="submit" class="button" value="Analyser le fichier">';
+	print '<input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("BelfiusAnalyzeFile")).'">';
 	print '</div>';
 	print '</form>';
 } else {
 	// Rapport d'analyse à valider avant toute écriture en base
-	print '<div class="info">Aucune écriture n\'a été créée en base : le rapport ci-dessous est une analyse à valider.</div>';
+	print '<div class="info">'.dol_escape_htmltag($langs->trans("BelfiusReportIntro")).'</div>';
 
 	if (!empty($parser->warnings)) {
 		foreach ($parser->warnings as $warning) {
@@ -162,18 +177,18 @@ if (!$parser) {
 	}
 
 	print '<table class="noborder centpercent">';
-	print '<tr class="liste_titre"><td>Indicateur</td><td>Valeur</td></tr>';
-	print '<tr class="oddeven"><td>Lignes valides</td><td>'.count($parser->validLines).'</td></tr>';
-	print '<tr class="oddeven"><td>Lignes rejetées</td><td>'.count($parser->rejectedLines).'</td></tr>';
-	print '<tr class="oddeven"><td>Solde recalculé</td><td>'.price($parser->computedBalance).'</td></tr>';
-	print '<tr class="oddeven"><td>Solde annoncé (préambule)</td><td>'.($parser->announcedBalance !== null ? price($parser->announcedBalance) : '-').'</td></tr>';
+	print '<tr class="liste_titre"><td>'.$langs->trans("BelfiusIndicator").'</td><td>'.$langs->trans("BelfiusValue").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans("BelfiusValidLines").'</td><td>'.count($parser->validLines).'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans("BelfiusRejectedLines").'</td><td>'.count($parser->rejectedLines).'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans("BelfiusComputedBalance").'</td><td>'.price($parser->computedBalance).'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans("BelfiusAnnouncedBalance").'</td><td>'.($parser->announcedBalance !== null ? price($parser->announcedBalance) : '-').'</td></tr>';
 	print '</table>';
 
-	print '<br><h3>Lignes rejetées ('.count($parser->rejectedLines).')</h3>';
+	print '<br><h3>'.$langs->trans("BelfiusRejectedLines").' ('.count($parser->rejectedLines).')</h3>';
 	print '<table class="noborder centpercent">';
-	print '<tr class="liste_titre"><td>Ligne</td><td>Raison du rejet</td></tr>';
+	print '<tr class="liste_titre"><td>'.$langs->trans("BelfiusLineNumber").'</td><td>'.$langs->trans("BelfiusRejectReason").'</td></tr>';
 	if (empty($parser->rejectedLines)) {
-		print '<tr class="oddeven"><td colspan="2" class="opacitymedium">Aucune ligne rejetée</td></tr>';
+		print '<tr class="oddeven"><td colspan="2" class="opacitymedium">'.$langs->trans("BelfiusNoRejectedLines").'</td></tr>';
 	} else {
 		foreach ($parser->rejectedLines as $lineNumber => $info) {
 			print '<tr class="oddeven"><td>'.((int) $lineNumber).'</td><td>'.dol_escape_htmltag($info['reason']).'</td></tr>';
@@ -182,14 +197,14 @@ if (!$parser) {
 	print '</table>';
 
 	if (!empty($parser->validLines)) {
-		print '<br><h3>Lignes qui seront importées ('.count($parser->validLines).')</h3>';
+		print '<br><h3>'.$langs->trans("BelfiusLinesToImport").' ('.count($parser->validLines).')</h3>';
 		print '<div style="max-height:500px; overflow-y:auto;">';
 		print '<table class="noborder centpercent">';
 		print '<tr class="liste_titre">';
-		print '<td>Date</td>';
-		print '<td>Contrepartie</td>';
-		print '<td class="right">Montant</td>';
-		print '<td>Communication</td>';
+		print '<td>'.$langs->trans("Date").'</td>';
+		print '<td>'.$langs->trans("BelfiusCounterparty").'</td>';
+		print '<td class="right">'.$langs->trans("Amount").'</td>';
+		print '<td>'.$langs->trans("BelfiusCommunication").'</td>';
 		print '</tr>';
 
 		foreach ($parser->validLines as $lineNumber => $row) {
@@ -214,18 +229,18 @@ if (!$parser) {
 
 	$fk_account = !empty($conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT) ? $conf->global->IMPORTBANCAIREBELFIUS_FK_ACCOUNT : 0;
 	if (empty($fk_account)) {
-		print '<br><div class="warning">Aucun compte bancaire cible configuré — configure-le d\'abord dans les paramètres du module avant de confirmer.</div>';
+		print '<br><div class="warning">'.dol_escape_htmltag($langs->trans("BelfiusNoAccountConfiguredWarning")).'</div>';
 	} else {
 		$targetAccount = new Account($db);
 		$targetAccount->fetch($fk_account);
-		print '<br><div class="center">Compte bancaire cible : <strong>'.dol_escape_htmltag($targetAccount->label).'</strong></div>';
+		print '<br><div class="center">'.$langs->trans("BelfiusTargetAccount").' : <strong>'.dol_escape_htmltag($targetAccount->label).'</strong></div>';
 	}
 
 	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'" id="belfius_report_form">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<div class="center">';
-	print '<input type="submit" class="button" id="btn_belfius_cancel" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="Annuler">';
-	print ' <input type="submit" class="button button-save" id="btn_belfius_confirm" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="Confirmer l\'import"'.(empty($fk_account) ? ' disabled' : '').'>';
+	print '<input type="submit" class="button" id="btn_belfius_cancel" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="'.dol_escape_htmltag($langs->trans("Cancel")).'">';
+	print ' <input type="submit" class="button button-save" id="btn_belfius_confirm" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="'.dol_escape_htmltag($langs->trans("BelfiusConfirmImport")).'"'.(empty($fk_account) ? ' disabled' : '').'>';
 	print '</div>';
 	print '</form>';
 	print '<script>
@@ -233,7 +248,7 @@ document.getElementById("belfius_report_form").addEventListener("submit", functi
 	document.getElementById("btn_belfius_cancel").disabled = true;
 	document.getElementById("btn_belfius_confirm").disabled = true;
 	if (e.submitter && e.submitter.id === "btn_belfius_confirm") {
-		e.submitter.value = "Import en cours...";
+		e.submitter.value = '.json_encode($langs->trans("BelfiusImportInProgressButton")).';
 	}
 });
 </script>';
