@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 LgHS
+/* Copyright (C) 2026 iooner.io for Liège Hackerspace
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,11 @@ class modImportBancaireBelfius extends DolibarrModules
 
 		$this->db = $db;
 
-		// Identifiant unique du module (plage réservée aux modules externes/custom : >= 100000)
-		$this->numero = 500000;
+		// Identifiant unique du module. Plage 100000-499999 = éditeurs tiers (à réserver
+		// officiellement auprès de l'équipe Dolibarr avant publication sur le Dolistore,
+		// voir https://wiki.dolibarr.org/index.php?title=List_of_modules_id).
+		// 109500 = choix provisoire, PAS ENCORE réservé officiellement.
+		$this->numero = 109500;
 
 		// Nom technique utilisé pour $user->rights->importbancairebelfius->...
 		$this->rights_class = 'importbancairebelfius';
@@ -45,15 +48,18 @@ class modImportBancaireBelfius extends DolibarrModules
 		$this->description = "Import des relevés bancaires Belfius (CSV) dans Dolibarr";
 		$this->descriptionlong = "Importe les extraits de compte Belfius exportés au format CSV, valide strictement leur contenu (en-tête, lignes, cohérence du solde) et crée les écritures bancaires après confirmation de l'utilisateur.";
 
-		$this->editor_name = 'DoliFius';
-		$this->editor_url = '';
+		$this->editor_name = 'iooner for LgHS';
+		$this->editor_url = 'https://github.com/LgHS/DoliFius';
 
 		$this->version = '1.0.0';
 
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 
-		// Icône du module (picto core Dolibarr, pas d'image custom pour la V1)
-		$this->picto = 'bank_account';
+		// Icône du module (syntaxe "nom@techname" pour indiquer à Dolibarr de la chercher
+		// dans le dossier du module). Deux fichiers fournis dans img/ pour couvrir les
+		// différents contextes de rendu observés : importbancairebelfius.png (menu, titres
+		// de page) et object_importbancairebelfius.png (liste des modules dans l'admin).
+		$this->picto = 'importbancairebelfius@importbancairebelfius';
 
 		$this->module_parts = array(
 			'triggers' => 0,
@@ -120,6 +126,9 @@ class modImportBancaireBelfius extends DolibarrModules
 			'fk_menu' => 'fk_mainmenu=bank',
 			'type' => 'left',
 			'titre' => 'Import Belfius',
+			// Icône Font Awesome plutôt qu'une image custom, pour rester cohérent avec les
+			// autres entrées du menu Banque & Caisse (qui utilisent toutes des picto FA).
+			'prefix' => '<i class="fas fa-file-import pictofixedwidth"></i>',
 			'mainmenu' => 'bank',
 			'leftmenu' => 'importbancairebelfius',
 			'url' => '/importbancairebelfius/belfiusimport.php',

@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 LgHS
+/* Copyright (C) 2026 iooner.io for Liège Hackerspace
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
-dol_include_once('/importbancairebelfius/class/belfiuscsvparser.class.php');
+// Fichier du module lui-même : chemin relatif (__DIR__), pas dol_include_once() qui est
+// prévu pour dépendre d'un AUTRE module externe (règles de packaging Dolibarr).
+require_once __DIR__.'/belfiuscsvparser.class.php';
 
 /**
  * Orchestration de l'import bancaire Belfius.
@@ -76,8 +78,9 @@ class BelfiusImport
 	 * Étape 2 : crée les écritures bancaires pour les lignes valides d'une analyse déjà
 	 * confirmée par l'utilisateur. Ne doit jamais être appelée sans confirmation explicite.
 	 *
-	 * Déduplication : la clé naturelle "<extrait>-<transaction>" (validée sur données réelles,
-	 * voir CLAUDE.md) est stockée dans le champ "N° chèque" de l'écriture (réutilisé comme champ
+	 * Déduplication : la clé naturelle "<extrait>-<transaction>" (numéro d'extrait et numéro de
+	 * transaction Belfius, une combinaison unique et fiable même en cas d'exports qui se
+	 * chevauchent) est stockée dans le champ "N° chèque" de l'écriture (réutilisé comme champ
 	 * technique libre, non affiché en avant du libellé). Avant de créer une ligne, on vérifie
 	 * qu'aucune écriture existante sur ce compte ne porte déjà cette clé — ça permet de
 	 * réimporter un export qui chevaucherait un import précédent sans créer de doublons, sans

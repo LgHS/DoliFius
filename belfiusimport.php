@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 LgHS
+/* Copyright (C) 2026 iooner.io for Liège Hackerspace
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,9 @@ if (!$res) {
 
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-dol_include_once('/importbancairebelfius/class/belfiusimport.class.php');
+// Fichier du module lui-même : chemin relatif (__DIR__), pas dol_include_once() qui est
+// prévu pour dépendre d'un AUTRE module externe (règles de packaging Dolibarr).
+require_once __DIR__.'/class/belfiusimport.class.php';
 
 global $db, $langs, $user, $conf;
 
@@ -154,11 +156,11 @@ llxHeader('', $title);
 
 print '<div class="center"><img src="'.dol_buildpath('/importbancairebelfius/img/dolifiuslogo.png', 1).'" style="max-height:80px;" alt="DoliFius"></div>';
 
-print load_fiche_titre($title, '', 'bank_account');
+print load_fiche_titre($title, '', 'importbancairebelfius@importbancairebelfius');
 
 if (!$parser) {
 	// Pas d'analyse en attente : formulaire d'upload
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'" enctype="multipart/form-data">';
+	print '<form method="POST" action="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'" enctype="multipart/form-data">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<input type="hidden" name="action" value="upload">';
 	print '<div class="center">';
@@ -236,11 +238,11 @@ if (!$parser) {
 		print '<br><div class="center">'.$langs->trans("BelfiusTargetAccount").' : <strong>'.dol_escape_htmltag($targetAccount->label).'</strong></div>';
 	}
 
-	print '<br><form method="POST" action="'.$_SERVER['PHP_SELF'].'" id="belfius_report_form">';
+	print '<br><form method="POST" action="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'" id="belfius_report_form">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<div class="center">';
-	print '<input type="submit" class="button" id="btn_belfius_cancel" name="action_cancel" formaction="'.$_SERVER['PHP_SELF'].'?action=cancel" value="'.dol_escape_htmltag($langs->trans("Cancel")).'">';
-	print ' <input type="submit" class="button button-save" id="btn_belfius_confirm" formaction="'.$_SERVER['PHP_SELF'].'?action=confirm" value="'.dol_escape_htmltag($langs->trans("BelfiusConfirmImport")).'"'.(empty($fk_account) ? ' disabled' : '').'>';
+	print '<input type="submit" class="button" id="btn_belfius_cancel" name="action_cancel" formaction="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'?action=cancel" value="'.dol_escape_htmltag($langs->trans("Cancel")).'">';
+	print ' <input type="submit" class="button button-save" id="btn_belfius_confirm" formaction="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'?action=confirm" value="'.dol_escape_htmltag($langs->trans("BelfiusConfirmImport")).'"'.(empty($fk_account) ? ' disabled' : '').'>';
 	print '</div>';
 	print '</form>';
 	print '<script>

@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2026 LgHS
+/* Copyright (C) 2026 iooner.io for Liège Hackerspace
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,9 +71,9 @@ $title = $langs->trans("ImportBancaireBelfiusSetup");
 llxHeader('', $title);
 
 $linkback = '<a href="'.DOL_URL_ROOT.'/admin/modules.php?restore_lastsearch_values=1">'.$langs->trans("BackToModuleList").'</a>';
-print load_fiche_titre($title, $linkback, 'bank_account');
+print load_fiche_titre($title, $linkback, 'importbancairebelfius@importbancairebelfius');
 
-print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<form method="POST" action="'.dol_escape_htmltag($_SERVER['PHP_SELF']).'">';
 print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="update">';
 

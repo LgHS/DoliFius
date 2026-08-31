@@ -2,22 +2,51 @@
 
 ![DoliFius](img/dolifiuslogo.png)
 
-**DoliFius** Dolibarr Module for Belfius CSV import.
+**Module Dolibarr pour importer les extraits de compte Belfius (export CSV) et faciliter le rapprochement bancaire.**
 
-Module Dolibarr custom pour importer les extraits de compte **Belfius** (export CSV) et faciliter le rapprochement bancaire.
+Dolibarr ne propose nativement aucun import de relevé bancaire — uniquement la saisie et le rapprochement manuel, écriture par écriture. Belfius ne fournissant pas d'accès API bancaire, les relevés sont téléchargés manuellement en CSV depuis le site de la banque : DoliFius les importe, les valide strictement, et crée les écritures bancaires correspondantes après validation humaine.
 
-## Pourquoi ce module
+Zéro dépendance externe : pas de librairie tierce, pas de service payant, uniquement le cœur Dolibarr (`Account`, `AccountLine`).
 
-Dolibarr ne propose nativement aucun import de relevé bancaire (uniquement la saisie et le rapprochement manuel, écriture par écriture). Belfius ne fournissant pas d'accès API bancaire, les relevés sont téléchargés manuellement en CSV depuis le site de la banque.
+## Fonctionnalités
 
-Plutôt qu'une solution générique du Dolistore (multi-banques, connexion à un service tiers payant...), ce module est volontairement minimaliste : **zéro dépendance externe**, uniquement le cœur Dolibarr, pour un seul besoin — importer les CSV Belfius.
+- Upload d'un export CSV Belfius et analyse stricte avant toute écriture : détection de l'en-tête, validation ligne par ligne (colonnes, dates, montants), calcul de cohérence du solde.
+- Rapport détaillé à l'écran (lignes acceptées / rejetées avec raison, solde recalculé vs annoncé) à valider avant toute création en base — **aucune écriture n'est jamais créée automatiquement**, la confirmation humaine est obligatoire à chaque import.
+- Création des écritures bancaires dans le compte Dolibarr de votre choix.
+- Déduplication automatique : réimporter un export qui chevauche un import précédent ne crée pas de doublons (clé n° d'extrait + n° de transaction).
+- Import atomique : en cas d'erreur en cours de route, rien n'est enregistré plutôt qu'un import à moitié fait.
 
-## Fonctionnement (V1)
+## Ce que le module ne fait pas (V1)
 
-1. Upload du fichier CSV exporté depuis Belfius.
-2. Analyse stricte du fichier : détection de l'en-tête, validation de chaque ligne, vérification de cohérence globale.
-3. Affichage d'un rapport (lignes lues / acceptées / rejetées) à valider par l'utilisateur.
-4. Création des écritures bancaires **uniquement après confirmation explicite**.
+- **Pas de rapprochement automatique avec les factures** — les écritures bancaires sont créées, mais leur lettrage avec les factures Dolibarr reste manuel, comme aujourd'hui avec le rapprochement natif.
+- **Pas de connexion bancaire directe** — l'export CSV reste à télécharger manuellement depuis le site Belfius, il n'y a pas d'accès API.
+- **Belfius uniquement** — le format CSV attendu est spécifique à Belfius, ce module ne gère pas d'autres banques.
+
+## Prérequis
+
+- Dolibarr 22.x ou supérieur.
+- PHP 7.2 ou supérieur.
+- Module **Banque & Caisse** de Dolibarr activé, avec au moins un compte bancaire déjà créé.
+
+## Installation
+
+1. Téléchargez le zip du module et déployez-le via **Configuration → Modules/Applications → Déployer un module externe**, ou copiez le dossier manuellement dans `custom/` de votre instance Dolibarr.
+   > ⚠️ Le dossier doit impérativement s'appeler `importbancairebelfius` (le nom technique utilisé partout dans le code). Si vous déployez un zip dont le dossier racine porte un autre nom (ex. le nom du dépôt), Dolibarr créera les liens de menu et de configuration vers un chemin qui n'existe pas, et vous aurez des erreurs 404.
+2. Activez le module depuis la liste des modules.
+3. **Donnez les permissions** : l'activation d'un module ne donne aucun droit automatiquement, même à un administrateur. Allez dans votre profil utilisateur → onglet Permissions → section "Import bancaire Belfius", cochez "Consulter" et "Importer", puis déconnectez-vous/reconnectez-vous.
+
+## Configuration
+
+Depuis la liste des modules, ouvrez la configuration de DoliFius (icône clé à molette) et sélectionnez le compte bancaire Dolibarr cible pour l'import. C'est ce compte qui recevra les écritures créées.
+
+## Utilisation
+
+1. Sur le site Belfius, exportez vos mouvements au format CSV (filtre par date depuis votre espace "Comptes").
+2. Dans Dolibarr, menu **Banque → Import Belfius**, uploadez le fichier.
+3. Vérifiez le rapport : nombre de lignes valides/rejetées (avec la raison de chaque rejet), avertissement de cohérence de solde le cas échéant, et le détail des lignes qui seront importées.
+4. Cliquez **Confirmer l'import** pour créer les écritures, ou **Annuler** pour tout abandonner sans rien écrire.
+
+Réimporter un fichier déjà traité (en partie ou en totalité) ne crée pas de doublons : les lignes déjà présentes sont automatiquement ignorées et comptabilisées comme telles dans le message de résultat.
 
 ## Format du fichier CSV attendu
 
@@ -43,36 +72,29 @@ Plutôt qu'une solution générique du Dolistore (multi-banques, connexion à un
 
 Ces trois lignes illustrent la variété réelle du champ **Communications** : une référence de cotisation en texte libre, un texte dupliqué de la colonne "Transaction" (paiement par carte), et une référence structurée de virement.
 
-## Ce que le module fait déjà
+## Sécurité et robustesse
 
-- [x] Activation du module sur Dolibarr 22.0.2 (permissions "Consulter" / "Importer" dédiées)
-- [x] Formulaire d'upload d'un fichier CSV Belfius
-- [x] Conversion ISO-8859-1 → UTF-8 et détection stricte de la ligne d'en-tête (abandon si format non reconnu)
-- [x] Validation ligne par ligne (nombre de colonnes, format de date, format de montant) avec raison du rejet
-- [x] Calcul du solde recalculé et comparaison au solde annoncé dans le préambule (avertissement non bloquant)
-- [x] Rapport complet à l'écran : compteurs, avertissements, lignes rejetées (toujours affichées, même vide), liste détaillée des lignes qui seront importées
-- [x] Page de configuration (`admin/setup.php`) : choix du compte bancaire Dolibarr cible pour l'import
-- [x] Création effective des écritures bancaires (`Account::addline()`) après confirmation humaine explicite — aucune écriture pendant l'analyse
-- [x] Déduplication : clé naturelle n° d'extrait + n° de transaction stockée dans le champ technique "N° chèque" de l'écriture, vérifiée avant toute création (pas de doublon si un export chevauchant est réimporté)
-- [x] Import atomique : tout ou rien, annulation complète si une ligne échoue en cours de route
-- [x] Protection contre un double-clic / une confirmation concurrente (verrou de session)
-- [x] Protection basique (fichiers `index.php` anti-listing, droits Dolibarr requis pour uploader/confirmer)
-- [x] Rapport d'analyse testé avec succès sur un export de production réel (269 lignes, 0 rejet)
-- [x] Test complet de bout en bout de la création d'écritures : import réel + réimport du même export pour valider la déduplication en conditions réelles
-
-## Prochaines étapes
-
-- [ ] Décider si les imports doivent être journalisés dans une table dédiée (audit) ou rester sans persistance au-delà du rapport affiché
-- [ ] Rapprochement automatique avec les factures ouvertes (V2), toujours avec confirmation humaine obligatoire avant toute création de règlement — jamais rien en automatique
-- [ ] Tester l'activation/le fonctionnement une fois la migration Dolibarr 22 → 23.x effectuée
-- [ ] Rapprochement automatique des lignes à l'utilisateur
-- [ ] Rapprochement automatique des lignes aux cotisations d'un utilisateur
-
-## Installation
-
-Copier ce dossier dans `custom/` de l'instance Dolibarr cible, puis activer le module depuis l'administration des modules.
+- **Confirmation humaine obligatoire** avant toute écriture en base — jamais d'import automatique, quel que soit le niveau de confiance de l'analyse.
+- Le fichier CSV est analysé et rejeté ligne par ligne si le format ne correspond pas (jamais d'insertion à l'aveugle).
+- Un changement de format côté Belfius (en-tête modifié) bloque l'import avec un message explicite plutôt que d'importer des données mal interprétées.
+- Les dossiers du module ne sont pas listables directement (protection contre l'exposition accidentelle des fichiers source).
 
 ## Compatibilité
 
-- Dolibarr 22.x+
-- PHP 7.2+
+- Dolibarr 22.x et supérieur.
+- PHP 7.2 et supérieur.
+
+## Licence
+
+GPL v3 ou supérieure — voir [LICENSE](LICENSE).
+
+## Feuille de route
+
+- [ ] Rapprochement automatique avec les factures ouvertes (toujours avec confirmation humaine — voir plus haut)
+- [ ] Rapprochement automatique des lignes aux cotisations d'un adhérent
+- [ ] Décision sur la journalisation des imports dans une table dédiée (audit)
+- [ ] Validation sur Dolibarr 23.x une fois la migration effectuée
+
+## Support
+
+Ouvrez une issue sur le dépôt GitHub du projet.
