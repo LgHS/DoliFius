@@ -30,7 +30,9 @@ Zéro dépendance externe : pas de librairie tierce, pas de service payant, uniq
 
 ## Installation
 
-1. Téléchargez le zip du module et déployez-le via **Configuration → Modules/Applications → Déployer un module externe**, ou copiez le dossier manuellement dans `custom/` de votre instance Dolibarr.
+Disponible sur le DoliStore : https://www.dolistore.com/product.php?id=3429
+
+1. Téléchargez le zip du module https://github.com/LgHS/DoliFius/releases et déployez-le via **Configuration → Modules/Applications → Déployer un module externe**, ou copiez le dossier manuellement dans `custom/` de votre instance Dolibarr.
    > ⚠️ Le dossier doit impérativement s'appeler `importbancairebelfius` (le nom technique utilisé partout dans le code). Si vous déployez un zip dont le dossier racine porte un autre nom (ex. le nom du dépôt), Dolibarr créera les liens de menu et de configuration vers un chemin qui n'existe pas, et vous aurez des erreurs 404.
 2. Activez le module depuis la liste des modules.
 3. **Donnez les permissions** : l'activation d'un module ne donne aucun droit automatiquement, même à un administrateur. Allez dans votre profil utilisateur → onglet Permissions → section "Import bancaire Belfius", cochez "Consulter" et "Importer", puis déconnectez-vous/reconnectez-vous.
